@@ -1,24 +1,23 @@
-#include "pump.h"
-#include "driver/gpio.h"
+#include "water_pump.h"
 #include "freertos/FreeRTOS.h"
 
 #include <stdlib.h>
-
-
-#define HIGH_LEVEL  1
-#define LOW_LEVEL   0
 
 static int pump_pin = -1;
 
 static TimerHandle_t pump_timer = NULL;
 
-static void pump_stop() {
+static void water_pump_stop() {
     if (pump_pin != -1) {
-        gpio_set_level(pump_pin, LOW_LEVEL);
+        gpio_set_level(pump_pin, 0);
     }
 }
 
-void pump_setup(int pin) {
+void water_pump_init(gpio_num_t pin) {
+    if (pump_timer != NULL) {
+        xTimerDelete(pump_timer, 0);
+    }
+
     pump_pin = pin;
 
     gpio_config_t pump_config = {
@@ -31,10 +30,10 @@ void pump_setup(int pin) {
 
     gpio_config(&pump_config);
 
-    gpio_set_level(pump_pin, LOW_LEVEL);
+    gpio_set_level(pump_pin, 0);
 
     pump_timer = xTimerCreate(
-        "PumpTimer",
+        "WaterPumpTimer",
         pdMS_TO_TICKS(1000),
         pdFALSE,
         NULL,
@@ -42,20 +41,20 @@ void pump_setup(int pin) {
     );
 }
 
-void pump_for(int time_ms) {
+void water_pump_pump_for(int time_ms) {
     if (pump_pin < 0) {
         return;
     }
 
-    gpio_set_level(pump_pin, HIGH_LEVEL);
+    gpio_set_level(pump_pin, 1);
 
     xTimerStop(pump_timer, 0);
     xTimerChangePeriod(pump_timer, pdMS_TO_TICKS(time_ms), 0);
     xTimerStart(pump_timer, 0);
 }
 
-void pump_free() {
-    gpio_set_level(pump_pin, LOW_LEVEL);
+void water_pump_deinit() {
+    gpio_set_level(pump_pin, 0);
 
     pump_pin = -1;
 
