@@ -12,43 +12,56 @@
 
 #include <stdlib.h>
 
+#define SOIL_MOISTURE_RAW_MAX 2700
+#define SOIL_MOISTURE_RAW_MIN 1600
+
 static adc_oneshot_unit_handle_t soil_moisture_adc_handle;
 
-unsigned int calculate_moisture_percents(int raw) {
-    float f_raw = raw / 100.f;
-    return (27.f - f_raw) / 16.f * 100;
+int soil_moisture_percent(int raw) {
+    if (raw < 0) {
+        return -1;
+    }
+
+    raw = (raw < SOIL_MOISTURE_RAW_MIN) ? SOIL_MOISTURE_RAW_MIN : raw;
+    raw = (raw > SOIL_MOISTURE_RAW_MAX) ? SOIL_MOISTURE_RAW_MAX : raw;
+
+    float f_raw = (float) raw;
+    float moisture = (SOIL_MOISTURE_RAW_MAX - f_raw) / (SOIL_MOISTURE_RAW_MAX - SOIL_MOISTURE_RAW_MIN) * 100.0f;
+
+    return (unsigned int) moisture;
 }
 
-int get_raw_soil_moisture() {
+int soil_moisture_read_raw() {
     int raw_data;
 
     adc_oneshot_read(soil_moisture_adc_handle, ADC_CHANNEL_6, &raw_data);
 
+    // There is no contact with the sensor
     if (raw_data == 0) {
-        return 2700;
+        return -1;
     }
 
     return raw_data;
 }
 
-void soil_moisture_sensor_setup() {
+void soil_moisture_init() {
     adc_oneshot_unit_init_cfg_t soil_moisture_init_config = {
         .unit_id = ADC_UNIT_1,
         .ulp_mode = ADC_ULP_MODE_DISABLE,
     };
 
-    adc_oneshot_new_unit(&soil_moisture_init_config, &soil_moisture_adc_handle);
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&soil_moisture_init_config, &soil_moisture_adc_handle));
 
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = ADC_BITWIDTH_DEFAULT,
         .atten = ADC_ATTEN_DB_12,
     };
 
-    adc_oneshot_config_channel(soil_moisture_adc_handle, ADC_CHANNEL_6, &config);
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(soil_moisture_adc_handle, ADC_CHANNEL_6, &config));
 
-    atexit(soil_moisture_sensor_free);
+    atexit(soil_moisture_deinit);
 }
 
-void soil_moisture_sensor_free() {
+void soil_moisture_deinit() {
     adc_oneshot_del_unit(soil_moisture_adc_handle);
 }

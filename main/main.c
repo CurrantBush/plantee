@@ -5,10 +5,10 @@
 
 #define PUMP_PIN 2
 
-#define SLEEP_TIME_MS 5000L
+#define SLEEP_TIME_MS 1000L
 
 static void app_setup() {
-    soil_moisture_sensor_setup();
+    soil_moisture_init();
     pump_setup(PUMP_PIN);
 }
 
@@ -20,11 +20,16 @@ void app_main() {
 
     while (1) {
         int soil_moisture_raw_rate = get_raw_soil_moisture();
-        unsigned int soil_moisture_rate = calculate_moisture_percents(soil_moisture_raw_rate);
+        int soil_moisture_rate = calculate_moisture_percents(soil_moisture_raw_rate);
 
-        printf("Soil moisture rate: %3u%%\n", soil_moisture_rate);
+        if (soil_moisture_rate < 0) {
+            printf("No contact with soil moisture sensor\n");
+        }
+        else {
+            printf("Soil moisture rate: %3u%%\n", soil_moisture_rate);
+        }
 
-        pump_for(3000);
+        pump_for(500);
 
         vTaskDelayUntil(&lastWakeTime, period);
     }

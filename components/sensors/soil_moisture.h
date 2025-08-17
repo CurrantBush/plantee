@@ -1,9 +1,9 @@
 #pragma once
 
-void soil_moisture_sensor_setup();
+void soil_moisture_init();
 
-int get_raw_soil_moisture();
+int soil_moisture_read_raw();
 
-unsigned int calculate_moisture_percents(int raw);
+int soil_moisture_percent(int raw);
 
-void soil_moisture_sensor_free();
+void soil_moisture_deinit();
