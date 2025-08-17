@@ -1,6 +1,6 @@
 #include "freertos/FreeRTOS.h"
 #include "soil_moisture.h"
-#include "pump.h"
+#include "water_pump.h"
 #include <stdio.h>
 
 #define PUMP_PIN 2
@@ -9,7 +9,7 @@
 
 static void app_setup() {
     soil_moisture_init();
-    pump_setup(PUMP_PIN);
+    water_pump_init(PUMP_PIN);
 }
 
 void app_main() {
@@ -19,8 +19,8 @@ void app_main() {
     const TickType_t period = pdMS_TO_TICKS(SLEEP_TIME_MS);
 
     while (1) {
-        int soil_moisture_raw_rate = get_raw_soil_moisture();
-        int soil_moisture_rate = calculate_moisture_percents(soil_moisture_raw_rate);
+        int soil_moisture_raw_rate = soil_moisture_read_raw();
+        int soil_moisture_rate = soil_moisture_percent(soil_moisture_raw_rate);
 
         if (soil_moisture_rate < 0) {
             printf("No contact with soil moisture sensor\n");
@@ -29,7 +29,7 @@ void app_main() {
             printf("Soil moisture rate: %3u%%\n", soil_moisture_rate);
         }
 
-        pump_for(500);
+        water_pump_pump_for(500);
 
         vTaskDelayUntil(&lastWakeTime, period);
     }
