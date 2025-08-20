@@ -1,11 +1,9 @@
 #include "freertos/FreeRTOS.h"
 #include "soil_moisture.h"
 #include "water_pump.h"
+#include "config.h"
+
 #include <stdio.h>
-
-#define PUMP_PIN 2
-
-#define SLEEP_TIME_MS 1000L
 
 static void app_setup() {
     soil_moisture_init();
@@ -25,11 +23,9 @@ void app_main() {
         if (soil_moisture_rate < 0) {
             printf("No contact with soil moisture sensor\n");
         }
-        else {
-            printf("Soil moisture rate: %3u%%\n", soil_moisture_rate);
+        else if (soil_moisture_rate <= MIN_SOIL_MOISTURE) {
+            water_pump_pump_for(DEFAULT_PUMP_TIME_MS);
         }
-
-        water_pump_pump_for(500);
 
         vTaskDelayUntil(&lastWakeTime, period);
     }
