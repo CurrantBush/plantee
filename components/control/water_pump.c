@@ -37,7 +37,7 @@ void water_pump_init(gpio_num_t pin) {
         pdMS_TO_TICKS(1000),
         pdFALSE,
         NULL,
-        pump_stop
+        water_pump_stop
     );
 }
 
