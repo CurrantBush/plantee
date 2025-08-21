@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 static void app_setup() {
-    soil_moisture_init();
+    soil_moisture_init(SOIL_MOISTURE_SENSOR_PIN);
     water_pump_init(PUMP_PIN);
 }
 
@@ -26,7 +26,6 @@ void app_main() {
             printf("No contact with soil moisture sensor\n");
         }
         else if (soil_moisture_rate <= MIN_SOIL_MOISTURE) {
-            printf("Pump should start now!\n");
             water_pump_pump_for(DEFAULT_PUMP_TIME_MS);
         }
 

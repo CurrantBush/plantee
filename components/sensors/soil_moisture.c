@@ -44,9 +44,14 @@ int soil_moisture_read_raw() {
     return raw_data;
 }
 
-void soil_moisture_init() {
+void soil_moisture_init(gpio_num_t pin) {
+    adc_channel_t adc_channel;
+    adc_unit_t adc_unit;
+
+    ESP_ERROR_CHECK(adc_oneshot_io_to_channel(pin, &adc_unit, &adc_channel));
+
     adc_oneshot_unit_init_cfg_t soil_moisture_init_config = {
-        .unit_id = ADC_UNIT_1,
+        .unit_id = adc_unit,
         .ulp_mode = ADC_ULP_MODE_DISABLE,
     };
 
@@ -57,7 +62,7 @@ void soil_moisture_init() {
         .atten = ADC_ATTEN_DB_12,
     };
 
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(soil_moisture_adc_handle, ADC_CHANNEL_6, &config));
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(soil_moisture_adc_handle, adc_channel, &config));
 
     atexit(soil_moisture_deinit);
 }
